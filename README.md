@@ -1,2 +1,2 @@
-# Jornada-Competici-n-ATM
+# Jornada-Competicion-ATM
 Jornadas de competición ATM
