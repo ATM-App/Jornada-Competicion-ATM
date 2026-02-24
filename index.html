@@ -126,15 +126,15 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // CONFIGURACIÓN REAL DE FIREBASE
+        // CONFIGURACIÓN DE FIREBASE ACTUALIZADA
         const firebaseConfig = {
-            apiKey: "AIzaSyDlh6zkFYxLsTM-RcA6JB0m_zlILHOfRqA",
-            authDomain: "asistenciakeepers-atm.firebaseapp.com",
-            databaseURL: "https://asistenciakeepers-atm-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "asistenciakeepers-atm",
-            storageBucket: "asistenciakeepers-atm.firebasestorage.app",
-            messagingSenderId: "448423444728",
-            appId: "1:448423444728:web:f6233b9cda680744e37b0d"
+            apiKey: "AIzaSyCPpDjMO5bHuSYvH8cVS5tUF_L7aSKHT8g",
+            authDomain: "jornadas-atm-f41b7.firebaseapp.com",
+            databaseURL: "https://jornadas-atm-f41b7-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "jornadas-atm-f41b7",
+            storageBucket: "jornadas-atm-f41b7.firebasestorage.app",
+            messagingSenderId: "933790154854",
+            appId: "1:933790154854:web:0ec9b0ee6479c47ac6eda7"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -155,7 +155,6 @@
             window.renderAll();
         });
 
-        // DESCARGA PDF DE MÁXIMA CALIDAD
         window.downloadPDF = () => {
             const element = document.getElementById('pdf-content');
             
@@ -187,7 +186,6 @@
             `;
             element.insertBefore(header, element.firstChild);
 
-            // OPTIMIZACIÓN PDF: Usando formato PNG, escala 4 y letterRendering para máxima nitidez (vector-like)
             const opt = {
                 margin:       15,
                 filename:     `Jornadas_ATM_${window.currentDate.toISOString().split('T')[0]}.pdf`,
