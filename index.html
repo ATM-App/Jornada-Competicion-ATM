@@ -73,8 +73,16 @@
             </div>
             <div class="sheet-body">
                 <div class="form-section">
-                    <label class="input-label">🛡️ EQUIPO ATM</label>
-                    <input type="text" id="inputTeam" placeholder="Ej: Cadete A" class="ios-input">
+                    <label class="input-label">🛡️ EQUIPO Y COMPETICIÓN</label>
+                    <div class="row-inputs">
+                        <input type="text" id="inputTeam" placeholder="Ej: Cadete A" class="ios-input">
+                        <select id="inputComp" class="ios-input">
+                            <option value="LIGA">LIGA</option>
+                            <option value="AMISTOSO">AMISTOSO</option>
+                            <option value="TORNEO">TORNEO</option>
+                            <option value="COPA">COPA</option>
+                        </select>
+                    </div>
                     <div class="row-inputs">
                         <select id="inputJornada" class="ios-input">
                             <option value="" disabled selected>Nº Jornada</option>
@@ -118,7 +126,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
-        // CONFIGURACIÓN DE FIREBASE
+        // CONFIGURACIÓN REAL DE FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyDlh6zkFYxLsTM-RcA6JB0m_zlILHOfRqA",
             authDomain: "asistenciakeepers-atm.firebaseapp.com",
@@ -147,7 +155,7 @@
             window.renderAll();
         });
 
-        // DESCARGA PDF ESTABLE Y NÍTIDA
+        // DESCARGA PDF DE MÁXIMA CALIDAD
         window.downloadPDF = () => {
             const element = document.getElementById('pdf-content');
             
@@ -179,13 +187,14 @@
             `;
             element.insertBefore(header, element.firstChild);
 
-            // Escala a 3 (Nítido sin bloquear la memoria) y calidad máxima en JPEG
+            // OPTIMIZACIÓN PDF: Usando formato PNG, escala 4 y letterRendering para máxima nitidez (vector-like)
             const opt = {
                 margin:       15,
                 filename:     `Jornadas_ATM_${window.currentDate.toISOString().split('T')[0]}.pdf`,
-                image:        { type: 'jpeg', quality: 1 }, 
+                image:        { type: 'png' }, 
                 html2canvas:  { 
-                    scale: 3, 
+                    scale: 4, 
+                    letterRendering: true,
                     useCORS: true,
                     backgroundColor: document.body.classList.contains('light-mode') ? '#f2f4f8' : '#0b0d17' 
                 },
@@ -197,13 +206,10 @@
                 document.getElementById('temp-pdf-header').remove();
                 btn.innerHTML = originalIcon;
             }).catch(err => {
-                // Si bloquea por abrirlo desde tu PC, restaura los botones para no dañar la app
                 actionButtons.forEach(el => el.style.display = 'flex');
                 document.getElementById('temp-pdf-header').remove();
                 btn.innerHTML = originalIcon;
-                
-                // Aviso elegante sobre el fallo
-                alert("Para descargar el PDF con el escudo sin errores, recuerda que debes subir la aplicación a GitHub Pages primero. (Es una medida de seguridad de tu navegador)");
+                alert("Recuerda subir a GitHub para que el escudo procese sin error de CORS local.");
             });
         };
 
@@ -211,6 +217,7 @@
             window.currentEditingId = null;
             document.getElementById('modalTitle').innerText = "Nuevo Partido";
             document.getElementById('inputTeam').value = "";
+            document.getElementById('inputComp').value = "LIGA";
             document.getElementById('inputJornada').value = "";
             document.getElementById('inputRival').value = "";
             document.getElementById('inputDate').value = window.currentDate.toISOString().split('T')[0];
@@ -228,6 +235,7 @@
 
             const matchData = {
                 team: team,
+                comp: document.getElementById('inputComp').value,
                 jornada: document.getElementById('inputJornada').value,
                 rival: document.getElementById('inputRival').value,
                 date: dateStr,
@@ -259,6 +267,7 @@
             window.currentEditingId = id;
             document.getElementById('modalTitle').innerText = "Editar Partido";
             document.getElementById('inputTeam').value = item.team;
+            document.getElementById('inputComp').value = item.comp || "LIGA";
             document.getElementById('inputJornada').value = item.jornada || "";
             document.getElementById('inputRival').value = item.rival;
             document.getElementById('inputDate').value = item.date;
@@ -276,8 +285,9 @@
         window.sendWhatsApp = (date, id) => {
             const item = matchesDB[date][id];
             const msg = `⚽ *JORNADA DE COMPETICIÓN ATM*%0A` +
+                        `🏆 *Competición:* ${item.comp || 'LIGA'}%0A` +
                         `🔴 *Equipo:* ${item.team}%0A` +
-                        `🔢 *Jornada:* ${item.jornada}%0A` +
+                        (item.jornada ? `🔢 *Jornada:* ${item.jornada}%0A` : "") +
                         `🆚 *Rival:* ${item.rival}%0A` +
                         `📅 *Fecha:* ${item.date}%0A` +
                         `⏰ *Hora:* ${item.time}%0A` +
@@ -329,12 +339,15 @@
                 </div>`;
             
             data.forEach(([id, item]) => {
+                const compDisplay = item.comp || "LIGA";
+                const jorDisplay = item.jornada ? `| JOR. ${item.jornada}` : "";
+
                 feed.innerHTML += `
                 <div class="agenda-card">
                     <div class="modern-card">
                         <div class="card-header-row">
                             <span class="badge">⏰ ${item.time}</span>
-                            <span style="font-size:0.75rem; color:var(--text-sec); font-weight:700;">Jor. ${item.jornada}</span>
+                            <span style="font-size:0.75rem; color:var(--text-sec); font-weight:700;">${compDisplay} ${jorDisplay}</span>
                         </div>
                         <h3 class="card-title">${item.team} <span style="font-weight:400; font-size:0.9rem;">vs</span> ${item.rival}</h3>
                         <p class="card-subtitle">🏟️ ${item.place}</p>
