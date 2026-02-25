@@ -1,9 +1,10 @@
-const CACHE_NAME = 'jornadas-atm-v1';
+const CACHE_NAME = 'jornadas-atm-v3'; // Versión actualizada para forzar refresco
 const urlsToCache = [
   './',
   './index.html',
   './style.css',
   './ESCUDO ATM.png',
+  './Jornadas ATM.png', // Añadida la imagen correcta a la caché
   './manifest.json'
 ];
 
