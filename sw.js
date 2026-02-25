@@ -1,4 +1,4 @@
-const CACHE_NAME = 'jornadas-atm-v1';
+const CACHE_NAME = 'jornadas-atm-v3';
 const urlsToCache = [
   './',
   './index.html',
