@@ -8,15 +8,13 @@
     <meta name="theme-color" content="#CB3524">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <link rel="apple-touch-icon" href="Jornadas ATM.png">
+    <link rel="apple-touch-icon" href="ESCUDO ATM.png">
     
     <link rel="stylesheet" href="style.css">
-    
     <link rel="icon" type="image/png" href="ESCUDO ATM.png">
-    
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
@@ -128,6 +126,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
+        // CONFIGURACIÓN DE FIREBASE ACTUALIZADA
         const firebaseConfig = {
             apiKey: "AIzaSyCPpDjMO5bHuSYvH8cVS5tUF_L7aSKHT8g",
             authDomain: "jornadas-atm-f41b7.firebaseapp.com",
@@ -208,7 +207,7 @@
                 actionButtons.forEach(el => el.style.display = 'flex');
                 document.getElementById('temp-pdf-header').remove();
                 btn.innerHTML = originalIcon;
-                alert("Error al generar PDF.");
+                alert("Recuerda subir a GitHub para que el escudo procese sin error de CORS local.");
             });
         };
 
@@ -240,7 +239,7 @@
                 date: dateStr,
                 time: document.getElementById('inputTime').value,
                 place: document.getElementById('inputPlace').value,
-                referee: document.getElementById('inputReferee').value, // Corregido según tu lógica
+                referee: document.getElementById('inputRef').value,
                 notes: document.getElementById('inputNotes').value
             };
 
@@ -256,6 +255,8 @@
                 showFeedback();
                 window.currentDate = new Date(dateStr + "T12:00:00"); 
                 window.renderAll(); 
+            }).catch((error) => {
+                alert("Error de conexión: " + error.message);
             });
         };
 
