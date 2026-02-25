@@ -1,5 +1,5 @@
 {
-  "name": "Jornadas Competición ATM",
+  "name": "Jornadas de Competición ATM",
   "short_name": "JornadasATM",
   "start_url": "./index.html",
   "display": "standalone",
@@ -8,14 +8,16 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "ESCUDO ATM.png",
+      "src": "Jornadas ATM.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "ESCUDO ATM.png",
+      "src": "Jornadas ATM.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }

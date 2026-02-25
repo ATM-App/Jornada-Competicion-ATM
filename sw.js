@@ -4,6 +4,7 @@ const urlsToCache = [
   './index.html',
   './style.css',
   './ESCUDO ATM.png',
+  './Jornadas ATM.png',
   './manifest.json'
 ];
 
