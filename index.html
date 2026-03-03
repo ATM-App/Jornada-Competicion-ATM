@@ -8,13 +8,13 @@
     <meta name="theme-color" content="#CB3524">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <link rel="apple-touch-icon" href="Jornadas ATM.png">
     
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="ESCUDO ATM.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
@@ -23,7 +23,9 @@
             <div class="brand-box">
                 <img src="ESCUDO ATM.png" alt="Escudo" class="escudo-header">
                 <div class="brand-text">
-                    <h1 class="app-title"><span class="t-main">Jornadas</span><span class="t-red">ATM</span></h1>
+                    <h1 class="app-title">
+                        <span class="t-main">Jornadas</span><span class="t-red">ATM</span>
+                    </h1>
                     <div class="date-info">
                         <h2 id="currentMonthLabel">CARGANDO...</h2>
                         <span class="badge-week" id="currentWeekLabel">...</span>
@@ -35,6 +37,7 @@
                 <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
             </div>
         </div>
+        
         <div class="nav-row">
             <div class="nav-arrows-group">
                 <button class="nav-btn" onclick="changeDate(-1)"><i class="fas fa-chevron-left"></i></button>
@@ -45,6 +48,7 @@
                 <div id="btnMonth" class="switch-item" onclick="switchView('month')">Mes</div>
             </div>
         </div>
+        
         <div id="datesContainer" class="ios-date-strip"></div>
     </div>
 
@@ -104,7 +108,7 @@
                 </div>
                 <div class="form-section">
                     <label class="input-label">📝 OBSERVACIONES</label>
-                    <textarea id="inputNotes" class="ios-input" rows="2" placeholder="Notas..."></textarea>
+                    <textarea id="inputNotes" class="ios-input" rows="2" style="resize:none;" placeholder="Punto de encuentro, ropa, etc..."></textarea>
                 </div>
                 <div style="height: 40px;"></div>
             </div>
@@ -135,7 +139,11 @@
         window.viewMode = 'week';
         window.currentEditingId = null;
 
-        // SEGURIDAD: Auth Anónima
+        if (localStorage.getItem('atm_theme') === 'light') { 
+            document.body.classList.add('light-mode'); 
+            document.getElementById('themeIcon').className = 'fas fa-sun'; 
+        }
+
         signInAnonymously(auth).catch(err => console.error("Auth Error:", err));
 
         onAuthStateChanged(auth, (user) => {
@@ -147,22 +155,62 @@
             }
         });
 
-        // Funciones de PDF, Guardado y UI (Restauradas e Intactas)
+        // CORRECCIÓN PDF: Restaurado el encabezado con escudo
         window.downloadPDF = () => {
             const element = document.getElementById('pdf-content');
-            if (element.innerText.includes('No hay partidos')) return;
+            if (element.innerText.includes('No hay partidos')) return alert('No hay partidos creados.');
+
             const btn = document.getElementById('pdfBtn');
+            const originalIcon = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
             const actionButtons = element.querySelectorAll('.card-actions');
             actionButtons.forEach(el => el.style.display = 'none');
+
+            const header = document.createElement('div');
+            header.id = 'temp-pdf-header';
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const dateStr = window.currentDate.toLocaleDateString('es-ES', options);
+
+            header.innerHTML = `
+                <div style="display:flex; align-items:center; gap:15px; margin-bottom:25px; padding-bottom:15px; border-bottom:3px solid #CB3524;">
+                    <img src="ESCUDO ATM.png" style="width:60px; height:60px;">
+                    <div>
+                        <h1 style="margin:0; font-size:1.8rem; font-weight:800; color: #1a1c2c;">Jornadas de Competición ATM</h1>
+                        <p style="margin:0; font-size:1rem; color:#666;">Partidos del ${dateStr}</p>
+                    </div>
+                </div>`;
+            element.insertBefore(header, element.firstChild);
+
             const opt = {
-                margin: 15, filename: `Jornadas_ATM.pdf`, image: { type: 'png' },
-                html2canvas: { scale: 4, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                margin: 15,
+                filename: `Jornadas_ATM_${window.currentDate.toISOString().split('T')[0]}.pdf`,
+                image: { type: 'png' },
+                html2canvas: { scale: 4, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
+
             html2pdf().set(opt).from(element).save().then(() => {
                 actionButtons.forEach(el => el.style.display = 'flex');
-                btn.innerHTML = '<i class="fas fa-file-pdf"></i>';
+                document.getElementById('temp-pdf-header').remove();
+                btn.innerHTML = originalIcon;
             });
+        };
+
+        // WHATSAPP CON EMOJIS
+        window.sendWhatsApp = (date, id) => {
+            const item = matchesDB[date][id];
+            const msg = `⚽ *JORNADA DE COMPETICIÓN ATM*%0A` +
+                        `🏆 *Competición:* ${item.comp || 'LIGA'}%0A` +
+                        `🔴 *Equipo:* ${item.team}%0A` +
+                        (item.jornada ? `🔢 *Jornada:* ${item.jornada}%0A` : "") +
+                        `🆚 *Rival:* ${item.rival}%0A` +
+                        `📅 *Fecha:* ${item.date}%0A` +
+                        `⏰ *Hora:* ${item.time}%0A` +
+                        `🏟️ *Lugar:* ${item.place}%0A` +
+                        `⚖️ *Árbitro:* ${item.referee}%0A` +
+                        (item.notes ? `📝 *Obs:* ${item.notes}` : "");
+            window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
         };
 
         window.saveMatch = () => {
@@ -185,7 +233,6 @@
                 window.closeModal();
                 document.getElementById('saveFeedback').classList.add('show');
                 setTimeout(() => document.getElementById('saveFeedback').classList.remove('show'), 1500);
-                window.currentDate = new Date(dateStr + "T12:00:00");
                 window.renderAll();
             });
         };
@@ -225,12 +272,15 @@
             const data = matchesDB[dayKey] ? Object.entries(matchesDB[dayKey]) : [];
             data.sort((a,b) => a[1].time.localeCompare(b[1].time));
             feed.innerHTML = data.length ? '' : `<div class="empty-state centered"><span class="empty-icon">🏟️</span><h3>No hay partidos creados</h3></div>`;
+            
             data.forEach(([id, item]) => {
                 feed.innerHTML += `<div class="agenda-card"><div class="modern-card">
                     <div class="card-header-row"><span class="badge">⏰ ${item.time}</span><span style="font-size:0.75rem; font-weight:700;">${item.comp || 'LIGA'} | Jor. ${item.jornada || '-'}</span></div>
                     <h3 class="card-title">${item.team} vs ${item.rival}</h3>
                     <p class="card-subtitle">🏟️ ${item.place} | ⚖️ Árbitro: ${item.referee}</p>
+                    ${item.notes ? `<div class="notes-box">📝 ${item.notes}</div>` : ''}
                     <div class="card-actions">
+                        <button class="btn-ios-action whatsapp-btn" onclick="sendWhatsApp('${dayKey}','${id}')"><i class="fab fa-whatsapp"></i> Compartir</button>
                         <button class="btn-ios-action secondary" onclick="editMatch('${dayKey}','${id}')"><i class="fas fa-pen"></i></button>
                         <button class="btn-ios-action secondary" onclick="deleteMatch('${dayKey}','${id}')"><i class="fas fa-trash"></i></button>
                     </div>
@@ -255,6 +305,7 @@
             document.body.classList.toggle('light-mode');
             const icon = document.body.classList.contains('light-mode') ? 'fas fa-sun' : 'fas fa-moon';
             document.getElementById('themeIcon').className = icon;
+            localStorage.setItem('atm_theme', document.body.classList.contains('light-mode') ? 'light' : 'dark');
         };
 
         window.editMatch = (date, id) => {
@@ -277,7 +328,6 @@
             if(confirm("¿Eliminar?")) remove(ref(db, `matches/${date}/${id}`));
         };
 
-        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
         window.renderAll();
     </script>
 </body>
