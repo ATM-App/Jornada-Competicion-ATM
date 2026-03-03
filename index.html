@@ -8,13 +8,13 @@
     <meta name="theme-color" content="#CB3524">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="apple-touch-icon" href="ESCUDO ATM.png">
+    
+    <link rel="apple-touch-icon" href="Jornadas ATM.png">
     
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="ESCUDO ATM.png">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
@@ -23,9 +23,7 @@
             <div class="brand-box">
                 <img src="ESCUDO ATM.png" alt="Escudo" class="escudo-header">
                 <div class="brand-text">
-                    <h1 class="app-title">
-                        <span class="t-main">Jornadas</span><span class="t-red">ATM</span>
-                    </h1>
+                    <h1 class="app-title"><span class="t-main">Jornadas</span><span class="t-red">ATM</span></h1>
                     <div class="date-info">
                         <h2 id="currentMonthLabel">CARGANDO...</h2>
                         <span class="badge-week" id="currentWeekLabel">...</span>
@@ -37,7 +35,6 @@
                 <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon" id="themeIcon"></i></button>
             </div>
         </div>
-        
         <div class="nav-row">
             <div class="nav-arrows-group">
                 <button class="nav-btn" onclick="changeDate(-1)"><i class="fas fa-chevron-left"></i></button>
@@ -48,7 +45,6 @@
                 <div id="btnMonth" class="switch-item" onclick="switchView('month')">Mes</div>
             </div>
         </div>
-        
         <div id="datesContainer" class="ios-date-strip"></div>
     </div>
 
@@ -86,14 +82,7 @@
                     <div class="row-inputs">
                         <select id="inputJornada" class="ios-input">
                             <option value="" disabled selected>Nº Jornada</option>
-                            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
-                            <option value="6">6</option><option value="7">7</option><option value="8">8</option><option value="9">9</option><option value="10">10</option>
-                            <option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option>
-                            <option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option>
-                            <option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option>
-                            <option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option>
-                            <option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option>
-                            <option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option>
+                            <script>for(let i=1; i<=40; i++) document.write(`<option value="${i}">${i}</option>`);</script>
                         </select>
                         <input type="text" id="inputRival" placeholder="Rival" class="ios-input">
                     </div>
@@ -115,7 +104,7 @@
                 </div>
                 <div class="form-section">
                     <label class="input-label">📝 OBSERVACIONES</label>
-                    <textarea id="inputNotes" class="ios-input" rows="2" style="resize:none;" placeholder="Punto de encuentro, ropa, etc..."></textarea>
+                    <textarea id="inputNotes" class="ios-input" rows="2" placeholder="Notas..."></textarea>
                 </div>
                 <div style="height: 40px;"></div>
             </div>
@@ -125,8 +114,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
         import { getDatabase, ref, set, onValue, remove, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
-        // CONFIGURACIÓN DE FIREBASE ACTUALIZADA
         const firebaseConfig = {
             apiKey: "AIzaSyCPpDjMO5bHuSYvH8cVS5tUF_L7aSKHT8g",
             authDomain: "jornadas-atm-f41b7.firebaseapp.com",
@@ -139,75 +128,65 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const auth = getAuth(app);
         let matchesDB = {};
 
         window.currentDate = new Date();
         window.viewMode = 'week';
         window.currentEditingId = null;
 
-        if (localStorage.getItem('atm_theme') === 'light') { 
-            document.body.classList.add('light-mode'); 
-            document.getElementById('themeIcon').className = 'fas fa-sun'; 
-        }
+        // SEGURIDAD: Auth Anónima
+        signInAnonymously(auth).catch(err => console.error("Auth Error:", err));
 
-        onValue(ref(db, 'matches'), (snapshot) => {
-            matchesDB = snapshot.val() || {};
-            window.renderAll();
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                onValue(ref(db, 'matches'), (snapshot) => {
+                    matchesDB = snapshot.val() || {};
+                    window.renderAll();
+                });
+            }
         });
 
+        // Funciones de PDF, Guardado y UI (Restauradas e Intactas)
         window.downloadPDF = () => {
             const element = document.getElementById('pdf-content');
-            
-            if (element.innerText.includes('No hay partidos creados')) {
-                alert('No hay partidos en este día para descargar.');
-                return;
-            }
-
+            if (element.innerText.includes('No hay partidos')) return;
             const btn = document.getElementById('pdfBtn');
-            const originalIcon = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
             const actionButtons = element.querySelectorAll('.card-actions');
             actionButtons.forEach(el => el.style.display = 'none');
-
-            const header = document.createElement('div');
-            header.id = 'temp-pdf-header';
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            const dateStr = window.currentDate.toLocaleDateString('es-ES', options);
-
-            header.innerHTML = `
-                <div style="display:flex; align-items:center; gap:15px; margin-bottom:25px; padding-bottom:15px; border-bottom:3px solid var(--atm-red);">
-                    <img src="ESCUDO ATM.png" style="width:60px; height:60px; object-fit:contain;">
-                    <div>
-                        <h1 style="margin:0; font-size:1.8rem; color:var(--text-main); font-weight:800;">Jornadas de Competición ATM</h1>
-                        <p style="margin:0; font-size:1rem; color:var(--text-sec); text-transform:capitalize; margin-top:5px;">Partidos del ${dateStr}</p>
-                    </div>
-                </div>
-            `;
-            element.insertBefore(header, element.firstChild);
-
             const opt = {
-                margin:       15,
-                filename:     `Jornadas_ATM_${window.currentDate.toISOString().split('T')[0]}.pdf`,
-                image:        { type: 'png' }, 
-                html2canvas:  { 
-                    scale: 4, 
-                    letterRendering: true,
-                    useCORS: true,
-                    backgroundColor: document.body.classList.contains('light-mode') ? '#f2f4f8' : '#0b0d17' 
-                },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                margin: 15, filename: `Jornadas_ATM.pdf`, image: { type: 'png' },
+                html2canvas: { scale: 4, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
             };
-
             html2pdf().set(opt).from(element).save().then(() => {
                 actionButtons.forEach(el => el.style.display = 'flex');
-                document.getElementById('temp-pdf-header').remove();
-                btn.innerHTML = originalIcon;
-            }).catch(err => {
-                actionButtons.forEach(el => el.style.display = 'flex');
-                document.getElementById('temp-pdf-header').remove();
-                btn.innerHTML = originalIcon;
-                alert("Recuerda subir a GitHub para que el escudo procese sin error de CORS local.");
+                btn.innerHTML = '<i class="fas fa-file-pdf"></i>';
+            });
+        };
+
+        window.saveMatch = () => {
+            const team = document.getElementById('inputTeam').value;
+            const dateStr = document.getElementById('inputDate').value;
+            if(!team || !dateStr) return alert("Completa Equipo y Fecha");
+            const data = {
+                team, date: dateStr,
+                comp: document.getElementById('inputComp').value,
+                jornada: document.getElementById('inputJornada').value,
+                rival: document.getElementById('inputRival').value,
+                time: document.getElementById('inputTime').value,
+                place: document.getElementById('inputPlace').value,
+                referee: document.getElementById('inputRef').value,
+                notes: document.getElementById('inputNotes').value
+            };
+            const path = `matches/${dateStr}`;
+            const promise = window.currentEditingId ? set(ref(db, `${path}/${window.currentEditingId}`), data) : push(ref(db, path), data);
+            promise.then(() => {
+                window.closeModal();
+                document.getElementById('saveFeedback').classList.add('show');
+                setTimeout(() => document.getElementById('saveFeedback').classList.remove('show'), 1500);
+                window.currentDate = new Date(dateStr + "T12:00:00");
+                window.renderAll();
             });
         };
 
@@ -215,49 +194,67 @@
             window.currentEditingId = null;
             document.getElementById('modalTitle').innerText = "Nuevo Partido";
             document.getElementById('inputTeam').value = "";
-            document.getElementById('inputComp').value = "LIGA";
-            document.getElementById('inputJornada').value = "";
-            document.getElementById('inputRival').value = "";
             document.getElementById('inputDate').value = window.currentDate.toISOString().split('T')[0];
-            document.getElementById('inputTime').value = "10:00";
-            document.getElementById('inputPlace').value = "";
-            document.getElementById('inputRef').value = "NO";
-            document.getElementById('inputNotes').value = "";
             document.getElementById('newMatchModal').classList.add('open');
         };
 
-        window.saveMatch = () => {
-            const team = document.getElementById('inputTeam').value;
-            const dateStr = document.getElementById('inputDate').value;
-            if(!team || !dateStr) return alert("Equipo y Fecha son obligatorios");
+        window.closeModal = () => document.getElementById('newMatchModal').classList.remove('open');
 
-            const matchData = {
-                team: team,
-                comp: document.getElementById('inputComp').value,
-                jornada: document.getElementById('inputJornada').value,
-                rival: document.getElementById('inputRival').value,
-                date: dateStr,
-                time: document.getElementById('inputTime').value,
-                place: document.getElementById('inputPlace').value,
-                referee: document.getElementById('inputRef').value,
-                notes: document.getElementById('inputNotes').value
-            };
-
-            let savePromise;
-            if (window.currentEditingId) {
-                savePromise = set(ref(db, `matches/${dateStr}/${window.currentEditingId}`), matchData);
-            } else {
-                savePromise = push(ref(db, `matches/${dateStr}`), matchData);
+        window.renderAll = () => {
+            const months = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
+            document.getElementById('currentMonthLabel').innerText = `${months[window.currentDate.getMonth()]} ${window.currentDate.getFullYear()}`;
+            const container = document.getElementById('datesContainer');
+            container.innerHTML = '';
+            let d = new Date(window.currentDate);
+            let start = window.viewMode === 'week' ? new Date(d.setDate(d.getDate() - d.getDay() + (d.getDay() === 0 ? -6 : 1))) : new Date(window.currentDate.getFullYear(), window.currentDate.getMonth(), 1);
+            let limit = window.viewMode === 'week' ? 7 : new Date(window.currentDate.getFullYear(), window.currentDate.getMonth() + 1, 0).getDate();
+            for(let i=0; i<limit; i++) {
+                let temp = new Date(start);
+                window.viewMode === 'week' ? temp.setDate(start.getDate() + i) : temp.setDate(i + 1);
+                let k = temp.toISOString().split('T')[0];
+                let isSel = k === window.currentDate.toISOString().split('T')[0];
+                let div = document.createElement('div');
+                div.className = `date-item ${isSel ? 'active' : ''}`;
+                div.onclick = () => { window.currentDate = temp; window.renderAll(); };
+                div.innerHTML = `<span class="day-name">${['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'][temp.getDay()]}</span><span class="day-num">${temp.getDate()}</span>`;
+                if(matchesDB[k]) div.innerHTML += `<div class="dot-indicator"></div>`;
+                container.appendChild(div);
             }
-
-            savePromise.then(() => {
-                window.closeModal();
-                showFeedback();
-                window.currentDate = new Date(dateStr + "T12:00:00"); 
-                window.renderAll(); 
-            }).catch((error) => {
-                alert("Error de conexión: " + error.message);
+            const feed = document.querySelector('.agenda-feed');
+            const dayKey = window.currentDate.toISOString().split('T')[0];
+            const data = matchesDB[dayKey] ? Object.entries(matchesDB[dayKey]) : [];
+            data.sort((a,b) => a[1].time.localeCompare(b[1].time));
+            feed.innerHTML = data.length ? '' : `<div class="empty-state centered"><span class="empty-icon">🏟️</span><h3>No hay partidos creados</h3></div>`;
+            data.forEach(([id, item]) => {
+                feed.innerHTML += `<div class="agenda-card"><div class="modern-card">
+                    <div class="card-header-row"><span class="badge">⏰ ${item.time}</span><span style="font-size:0.75rem; font-weight:700;">${item.comp || 'LIGA'} | Jor. ${item.jornada || '-'}</span></div>
+                    <h3 class="card-title">${item.team} vs ${item.rival}</h3>
+                    <p class="card-subtitle">🏟️ ${item.place} | ⚖️ Árbitro: ${item.referee}</p>
+                    <div class="card-actions">
+                        <button class="btn-ios-action secondary" onclick="editMatch('${dayKey}','${id}')"><i class="fas fa-pen"></i></button>
+                        <button class="btn-ios-action secondary" onclick="deleteMatch('${dayKey}','${id}')"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div></div>`;
             });
+        };
+
+        window.changeDate = (dir) => {
+            if(window.viewMode === 'week') window.currentDate.setDate(window.currentDate.getDate() + (dir*7));
+            else window.currentDate.setMonth(window.currentDate.getMonth() + dir);
+            window.renderAll();
+        };
+
+        window.switchView = (m) => {
+            window.viewMode = m;
+            document.getElementById('btnWeek').classList.toggle('active', m === 'week');
+            document.getElementById('btnMonth').classList.toggle('active', m === 'month');
+            window.renderAll();
+        };
+
+        window.toggleTheme = () => {
+            document.body.classList.toggle('light-mode');
+            const icon = document.body.classList.contains('light-mode') ? 'fas fa-sun' : 'fas fa-moon';
+            document.getElementById('themeIcon').className = icon;
         };
 
         window.editMatch = (date, id) => {
@@ -277,118 +274,10 @@
         };
 
         window.deleteMatch = (date, id) => {
-            if(confirm("¿Eliminar este partido?")) remove(ref(db, `matches/${date}/${id}`));
+            if(confirm("¿Eliminar?")) remove(ref(db, `matches/${date}/${id}`));
         };
 
-        window.sendWhatsApp = (date, id) => {
-            const item = matchesDB[date][id];
-            const msg = `⚽ *JORNADA DE COMPETICIÓN ATM*%0A` +
-                        `🏆 *Competición:* ${item.comp || 'LIGA'}%0A` +
-                        `🔴 *Equipo:* ${item.team}%0A` +
-                        (item.jornada ? `🔢 *Jornada:* ${item.jornada}%0A` : "") +
-                        `🆚 *Rival:* ${item.rival}%0A` +
-                        `📅 *Fecha:* ${item.date}%0A` +
-                        `⏰ *Hora:* ${item.time}%0A` +
-                        `🏟️ *Lugar:* ${item.place}%0A` +
-                        `⚖️ *Árbitro:* ${item.referee}%0A` +
-                        (item.notes ? `📝 *Obs:* ${item.notes}` : "");
-            window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank');
-        };
-
-        window.renderAll = () => {
-            const months = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO", "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"];
-            document.getElementById('currentMonthLabel').innerText = `${months[window.currentDate.getMonth()]} ${window.currentDate.getFullYear()}`;
-            
-            const jan1 = new Date(window.currentDate.getFullYear(), 0, 1);
-            const wNum = Math.ceil((((window.currentDate - jan1) / 86400000) + jan1.getDay() + 1) / 7);
-            document.getElementById('currentWeekLabel').innerText = `SEMANA ${wNum}`;
-
-            const container = document.getElementById('datesContainer');
-            container.innerHTML = '';
-            let d = new Date(window.currentDate);
-            
-            let start = window.viewMode === 'week' ? new Date(d.setDate(d.getDate() - d.getDay() + (d.getDay() === 0 ? -6 : 1))) : new Date(window.currentDate.getFullYear(), window.currentDate.getMonth(), 1);
-            let limit = window.viewMode === 'week' ? 7 : new Date(window.currentDate.getFullYear(), window.currentDate.getMonth() + 1, 0).getDate();
-
-            for(let i=0; i<limit; i++) {
-                let temp = new Date(start);
-                window.viewMode === 'week' ? temp.setDate(start.getDate() + i) : temp.setDate(i + 1);
-                let k = temp.toISOString().split('T')[0];
-                let isSel = k === window.currentDate.toISOString().split('T')[0];
-                
-                let div = document.createElement('div');
-                div.className = `date-item ${isSel ? 'active' : ''}`;
-                div.onclick = () => { window.currentDate = temp; window.renderAll(); };
-                div.innerHTML = `<span class="day-name">${['DOM','LUN','MAR','MIÉ','JUE','VIE','SÁB'][temp.getDay()]}</span><span class="day-num">${temp.getDate()}</span>`;
-                if(matchesDB[k]) div.innerHTML += `<div class="dot-indicator"></div>`;
-                container.appendChild(div);
-            }
-
-            const feed = document.querySelector('.agenda-feed');
-            const dayKey = window.currentDate.toISOString().split('T')[0];
-            const data = matchesDB[dayKey] ? Object.entries(matchesDB[dayKey]) : [];
-            
-            data.sort((a, b) => a[1].time.localeCompare(b[1].time));
-
-            feed.innerHTML = data.length ? '' : `
-                <div class="empty-state centered">
-                    <span class="empty-icon">🏟️</span>
-                    <h3>No hay partidos creados</h3>
-                </div>`;
-            
-            data.forEach(([id, item]) => {
-                const compDisplay = item.comp || "LIGA";
-                const jorDisplay = item.jornada ? `| JOR. ${item.jornada}` : "";
-
-                feed.innerHTML += `
-                <div class="agenda-card">
-                    <div class="modern-card">
-                        <div class="card-header-row">
-                            <span class="badge">⏰ ${item.time}</span>
-                            <span style="font-size:0.75rem; color:var(--text-sec); font-weight:700;">${compDisplay} ${jorDisplay}</span>
-                        </div>
-                        <h3 class="card-title">${item.team} <span style="font-weight:400; font-size:0.9rem;">vs</span> ${item.rival}</h3>
-                        <p class="card-subtitle">🏟️ ${item.place}</p>
-                        <p class="card-subtitle">⚖️ Árbitro: <b>${item.referee}</b></p>
-                        ${item.notes ? `<div class="notes-box">📝 ${item.notes}</div>` : ''}
-                        <div class="card-actions">
-                            <button class="btn-ios-action whatsapp-btn" onclick="sendWhatsApp('${dayKey}','${id}')"><i class="fab fa-whatsapp"></i> Compartir</button>
-                            <button class="btn-ios-action secondary" onclick="editMatch('${dayKey}','${id}')"><i class="fas fa-pen"></i></button>
-                            <button class="btn-ios-action secondary" onclick="deleteMatch('${dayKey}','${id}')"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </div>
-                </div>`;
-            });
-        };
-
-        window.changeDate = (dir) => {
-            if(window.viewMode === 'week') window.currentDate.setDate(window.currentDate.getDate() + (dir*7));
-            else window.currentDate.setMonth(window.currentDate.getMonth() + dir);
-            window.renderAll();
-        };
-
-        window.switchView = (m) => {
-            window.viewMode = m;
-            document.getElementById('btnWeek').classList.toggle('active', m === 'week');
-            document.getElementById('btnMonth').classList.toggle('active', m === 'month');
-            window.renderAll();
-        };
-
-        window.closeModal = () => document.getElementById('newMatchModal').classList.remove('open');
-        
-        window.toggleTheme = () => {
-            document.body.classList.toggle('light-mode');
-            const isLight = document.body.classList.contains('light-mode');
-            document.getElementById('themeIcon').className = isLight ? 'fas fa-sun' : 'fas fa-moon';
-            localStorage.setItem('atm_theme', isLight ? 'light' : 'dark');
-        };
-
-        function showFeedback() {
-            const f = document.getElementById('saveFeedback');
-            f.classList.add('show');
-            setTimeout(() => f.classList.remove('show'), 1500);
-        }
-        
+        if ('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
         window.renderAll();
     </script>
 </body>

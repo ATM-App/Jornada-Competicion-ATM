@@ -1,9 +1,10 @@
-const CACHE_NAME = 'jornadas-atm-v1';
+const CACHE_NAME = 'jornadas-atm-v4';
 const urlsToCache = [
   './',
   './index.html',
   './style.css',
   './ESCUDO ATM.png',
+  './Jornadas ATM.png',
   './manifest.json'
 ];
 
